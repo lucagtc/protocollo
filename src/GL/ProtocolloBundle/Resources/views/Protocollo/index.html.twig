@@ -1,0 +1,61 @@
+<h1>Protocollo list</h1>
+
+<table class="records_list">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Anno</th>
+            <th>Protocollo</th>
+            <th>Ui</th>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Nome</th>
+            <th>Indirizzo</th>
+            <th>Localita</th>
+            <th>Oggetto</th>
+            <th>Posizione</th>
+            <th>User_id</th>
+            <th>Created_at</th>
+            <th>Updated_at</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for entity in entities %}
+        <tr>
+            <td><a href="{{ path('protocollo_show', { 'id': entity.id }) }}">{{ entity.id }}</a></td>
+            <td>{{ entity.anno }}</td>
+            <td>{{ entity.protocollo }}</td>
+            <td>{{ entity.UI }}</td>
+            <td>{% if entity.data %}{{ entity.data|date('Y-m-d H:i:s') }}{% endif %}</td>
+            <td>{{ entity.tipo }}</td>
+            <td>{{ entity.nome }}</td>
+            <td>{{ entity.indirizzo }}</td>
+            <td>{{ entity.localita }}</td>
+            <td>{{ entity.oggetto }}</td>
+            <td>{{ entity.posizione }}</td>
+            <td>{{ entity.userid }}</td>
+            <td>{% if entity.createdat %}{{ entity.createdat|date('Y-m-d H:i:s') }}{% endif %}</td>
+            <td>{% if entity.updatedat %}{{ entity.updatedat|date('Y-m-d H:i:s') }}{% endif %}</td>
+            <td>
+                <ul>
+                    <li>
+                        <a href="{{ path('protocollo_show', { 'id': entity.id }) }}">show</a>
+                    </li>
+                    <li>
+                        <a href="{{ path('protocollo_edit', { 'id': entity.id }) }}">edit</a>
+                    </li>
+                </ul>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<ul>
+    <li>
+        <a href="{{ path('protocollo_new') }}">
+            Create a new entry
+        </a>
+    </li>
+</ul>
