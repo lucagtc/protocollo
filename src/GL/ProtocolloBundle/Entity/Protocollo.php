@@ -4,14 +4,12 @@ namespace GL\ProtocolloBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
 
 /**
  * GL\ProtocolloBundle\Entity\Protocollo
  *
- * @ORM\Table()
+ * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="main_idx", columns={"anno", "protocollo"})})
  * @ORM\Entity(repositoryClass="GL\ProtocolloBundle\Repository\ProtocolloRepository")
- * @DoctrineAssert\UniqueEntity(fields={"anno", "protocollo"}, message="Numero di protocollo già usato per l'anno")
  * @ORM\HasLifecycleCallbacks
  */
 class Protocollo {
@@ -40,13 +38,13 @@ class Protocollo {
     private $protocollo;
 
     /**
-     * @var string $UI
+     * @var string $tipo
      *
-     * @ORM\Column(name="UI", type="string", length=1)
+     * @ORM\Column(name="tipo", type="string", length=1)
      * @Assert\Choice(choices = {"U", "I"}, message = "Scegliere U per uscita o I per ingresso.")
      *
      */
-    private $UI;
+    private $tipo;
 
     /**
      * @var date $data
@@ -56,18 +54,18 @@ class Protocollo {
     private $data;
 
     /**
-     * @var string $tipo
+     * @var string $formato
      *
-     * @ORM\Column(name="tipo", type="string", length=25)
+     * @ORM\Column(name="formato", type="string", length=25)
      */
-    private $tipo;
+    private $formato;
 
     /**
-     * @var string $nome
+     * @var string $intestazione
      *
-     * @ORM\Column(name="nome", type="string", length=255)
+     * @ORM\Column(name="intestazione", type="string", length=255)
      */
-    private $nome;
+    private $intestazione;
 
     /**
      * @var string $indirizzo
@@ -143,7 +141,11 @@ class Protocollo {
     public function __construct() {
         $data = new \DateTime();
         $this->anno = $data->format('Y');
+        $this->protocollo = 0;
+        $this->data = $data;
         $this->created_at = $data;
+
+        return $this;
     }
 
     public function __toString() {
@@ -200,23 +202,23 @@ class Protocollo {
     }
 
     /**
-     * Set UI
+     * Set tipo
      *
-     * @param string $uI
+     * @param string $tipo
      * @return Protocollo
      */
-    public function setUI($uI) {
-        $this->UI = $uI;
+    public function setTipo($tipo) {
+        $this->tipo = strtoupper($tipo);
         return $this;
     }
 
     /**
-     * Get UI
+     * Get tipo
      *
      * @return string
      */
-    public function getUI() {
-        return $this->UI;
+    public function getTipo() {
+        return $this->tipo;
     }
 
     /**
@@ -240,43 +242,43 @@ class Protocollo {
     }
 
     /**
-     * Set tipo
+     * Set formato
      *
-     * @param string $tipo
+     * @param string $formato
      * @return Protocollo
      */
-    public function setTipo($tipo) {
-        $this->tipo = $tipo;
+    public function setFormato($formato) {
+        $this->formato = $formato;
         return $this;
     }
 
     /**
-     * Get tipo
+     * Get formato
      *
      * @return string
      */
-    public function getTipo() {
-        return $this->tipo;
+    public function getFormato() {
+        return $this->formato;
     }
 
     /**
-     * Set nome
+     * Set intestazione
      *
-     * @param string $nome
+     * @param string $intestazione
      * @return Protocollo
      */
-    public function setNome($nome) {
-        $this->nome = $nome;
+    public function setIntestazione($intestazione) {
+        $this->intestazione = $intestazione;
         return $this;
     }
 
     /**
-     * Get nome
+     * Get intestazione
      *
      * @return string
      */
-    public function getNome() {
-        return $this->nome;
+    public function getIntestazione() {
+        return $this->intestazione;
     }
 
     /**
@@ -467,15 +469,13 @@ class Protocollo {
         return $this->protocolloPrecedente;
     }
 
-
     /**
      * Set protocolloDocumento
      *
      * @param string $protocolloDocumento
      * @return Protocollo
      */
-    public function setProtocolloDocumento($protocolloDocumento)
-    {
+    public function setProtocolloDocumento($protocolloDocumento) {
         $this->protocolloDocumento = $protocolloDocumento;
         return $this;
     }
@@ -483,10 +483,10 @@ class Protocollo {
     /**
      * Get protocolloDocumento
      *
-     * @return string 
+     * @return string
      */
-    public function getProtocolloDocumento()
-    {
+    public function getProtocolloDocumento() {
         return $this->protocolloDocumento;
     }
+
 }

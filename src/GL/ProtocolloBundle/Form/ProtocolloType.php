@@ -12,7 +12,7 @@ class ProtocolloType extends AbstractType {
         $builder
                 ->add('anno')
                 ->add('protocollo')
-                ->add('UI', 'choice', array(
+                ->add('tipo', 'choice', array(
                     'choices' => array('U' => 'Uscita', 'I' => 'Ingresso'),
                     'required' => true,
                     'expanded' => true,
@@ -20,8 +20,8 @@ class ProtocolloType extends AbstractType {
                 ->add('data', 'date', array(
                     'pattern' => '{{ day }}-{{ month }}-{{ year }}'
                 ))
-                ->add('tipo')
-                ->add('nome')
+                ->add('formato')
+                ->add('intestazione')
                 ->add('indirizzo')
                 ->add('localita')
                 ->add('oggetto')

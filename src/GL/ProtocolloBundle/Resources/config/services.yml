@@ -1,0 +1,6 @@
+#services:
+#    assegna_protocollo.listener:
+#        class: GL\ProtocolloBundle\Listener\AssegnaProtocollo
+#        tags:
+#            - { name: doctrine.event_listener, event: prePersist }
+

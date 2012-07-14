@@ -14,16 +14,15 @@ use GL\ProtocolloBundle\Form\ProtocolloType;
  *
  * @Route("/protocollo")
  */
-class ProtocolloController extends Controller
-{
+class ProtocolloController extends Controller {
+
     /**
      * Lists all Protocollo entities.
      *
      * @Route("/", name="protocollo")
      * @Template()
      */
-    public function indexAction()
-    {
+    public function indexAction() {
         $em = $this->getDoctrine()->getManager();
 
         $entities = $em->getRepository('GLProtocolloBundle:Protocollo')->findAll();
@@ -39,8 +38,7 @@ class ProtocolloController extends Controller
      * @Route("/{id}/show", name="protocollo_show")
      * @Template()
      */
-    public function showAction($id)
-    {
+    public function showAction($id) {
         $em = $this->getDoctrine()->getManager();
 
         $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
@@ -49,11 +47,8 @@ class ProtocolloController extends Controller
             throw $this->createNotFoundException('Unable to find Protocollo entity.');
         }
 
-        $deleteForm = $this->createDeleteForm($id);
-
         return array(
-            'entity'      => $entity,
-            'delete_form' => $deleteForm->createView(),
+            'entity' => $entity,
         );
     }
 
@@ -63,14 +58,13 @@ class ProtocolloController extends Controller
      * @Route("/new", name="protocollo_new")
      * @Template()
      */
-    public function newAction()
-    {
+    public function newAction() {
         $entity = new Protocollo();
-        $form   = $this->createForm(new ProtocolloType(), $entity);
+        $form = $this->createForm(new ProtocolloType(), $entity);
 
         return array(
             'entity' => $entity,
-            'form'   => $form->createView(),
+            'form' => $form->createView(),
         );
     }
 
@@ -81,16 +75,15 @@ class ProtocolloController extends Controller
      * @Method("post")
      * @Template("GLProtocolloBundle:Protocollo:new.html.twig")
      */
-    public function createAction()
-    {
-        $entity  = new Protocollo();
+    public function createAction() {
+        $entity = new Protocollo();
         $request = $this->getRequest();
-        $form    = $this->createForm(new ProtocolloType(), $entity);
+        $form = $this->createForm(new ProtocolloType(), $entity);
         $form->bindRequest($request);
 
         if ($form->isValid()) {
             $em = $this->getDoctrine()->getManager();
-            $em->persist($entity);
+            $em->getRepository('GLProtocolloBundle:Protocollo')->persist($entity);
             $em->flush();
 
             return $this->redirect($this->generateUrl('protocollo_show', array('id' => $entity->getId())));
@@ -98,7 +91,7 @@ class ProtocolloController extends Controller
 
         return array(
             'entity' => $entity,
-            'form'   => $form->createView(),
+            'form' => $form->createView(),
         );
     }
 
@@ -108,8 +101,7 @@ class ProtocolloController extends Controller
      * @Route("/{id}/edit", name="protocollo_edit")
      * @Template()
      */
-    public function editAction($id)
-    {
+    public function editAction($id) {
         $em = $this->getDoctrine()->getManager();
 
         $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
@@ -122,8 +114,8 @@ class ProtocolloController extends Controller
         $deleteForm = $this->createDeleteForm($id);
 
         return array(
-            'entity'      => $entity,
-            'edit_form'   => $editForm->createView(),
+            'entity' => $entity,
+            'edit_form' => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
         );
     }
@@ -135,8 +127,7 @@ class ProtocolloController extends Controller
      * @Method("post")
      * @Template("GLProtocolloBundle:Protocollo:edit.html.twig")
      */
-    public function updateAction($id)
-    {
+    public function updateAction($id) {
         $em = $this->getDoctrine()->getManager();
 
         $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
@@ -145,7 +136,7 @@ class ProtocolloController extends Controller
             throw $this->createNotFoundException('Unable to find Protocollo entity.');
         }
 
-        $editForm   = $this->createForm(new ProtocolloType(), $entity);
+        $editForm = $this->createForm(new ProtocolloType(), $entity);
         $deleteForm = $this->createDeleteForm($id);
 
         $request = $this->getRequest();
@@ -153,15 +144,15 @@ class ProtocolloController extends Controller
         $editForm->bindRequest($request);
 
         if ($editForm->isValid()) {
-            $em->persist($entity);
+            $em->getRepository('GLProtocolloBundle:Protocollo')->persist($entity);
             $em->flush();
 
             return $this->redirect($this->generateUrl('protocollo_edit', array('id' => $id)));
         }
 
         return array(
-            'entity'      => $entity,
-            'edit_form'   => $editForm->createView(),
+            'entity' => $entity,
+            'edit_form' => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
         );
     }
@@ -172,8 +163,7 @@ class ProtocolloController extends Controller
      * @Route("/{id}/delete", name="protocollo_delete")
      * @Method("post")
      */
-    public function deleteAction($id)
-    {
+    public function deleteAction($id) {
         $form = $this->createDeleteForm($id);
         $request = $this->getRequest();
 
@@ -194,11 +184,11 @@ class ProtocolloController extends Controller
         return $this->redirect($this->generateUrl('protocollo'));
     }
 
-    private function createDeleteForm($id)
-    {
+    private function createDeleteForm($id) {
         return $this->createFormBuilder(array('id' => $id))
-            ->add('id', 'hidden')
-            ->getForm()
+                        ->add('id', 'hidden')
+                        ->getForm()
         ;
     }
+
 }
