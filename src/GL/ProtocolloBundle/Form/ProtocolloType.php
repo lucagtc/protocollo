@@ -17,7 +17,10 @@ class ProtocolloType extends AbstractType {
                     'required' => true,
                     'expanded' => true,
                 ))
-                ->add('data', 'date', array(
+                ->add('dataInserimento', 'date', array(
+                    'pattern' => '{{ day }}-{{ month }}-{{ year }}'
+                ))
+                ->add('dataDocumento', 'date', array(
                     'pattern' => '{{ day }}-{{ month }}-{{ year }}'
                 ))
                 ->add('formato')
@@ -32,6 +35,7 @@ class ProtocolloType extends AbstractType {
                     'empty_value' => '',
                     'required' => false,
                 ))
+                ->add('allegato')
         ;
     }
 

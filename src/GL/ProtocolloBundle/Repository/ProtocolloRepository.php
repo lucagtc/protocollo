@@ -42,7 +42,7 @@ class ProtocolloRepository extends EntityRepository {
                 $protocollo->setProtocollo(1);
             }
         }
-
+        //$protocollo->upload('/tmp/', '/tmp/');
         $this->getEntityManager()->persist($protocollo);
 
         return $protocollo;

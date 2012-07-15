@@ -21,8 +21,8 @@
             <td>{{ entity.anno }}</td>
             <td>{{ entity.protocollo }}</td>
             <td>{{ (entity.tipo=='U'?'Uscita':'Ingresso') }}</td>
-            <td>{% if entity.data %}{{ entity.data|date('Y-m-d') }}{% endif %}</td>
-            <td>{% if entity.createdAt %}{{ entity.createdAt|date('Y-m-d') }}{% endif %}</td>
+            <td>{% if entity.dataDocumento %}{{ entity.dataDocumento|date('d/m/Y') }}{% endif %}</td>
+            <td>{% if entity.dataInserimento %}{{ entity.dataInserimento|date('d/m/Y') }}{% endif %}</td>
             <td>{{ entity.formato }}</td>
             <td>{{ entity.intestazione }}<br>{{ entity.indirizzo }}<br>{{ entity.localita }}</td>
             <td>{{ entity.oggetto }}</td>

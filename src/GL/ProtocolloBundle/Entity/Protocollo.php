@@ -47,11 +47,11 @@ class Protocollo {
     private $tipo;
 
     /**
-     * @var date $data
+     * @var date $dataDocumento
      *
-     * @ORM\Column(name="data", type="date")
+     * @ORM\Column(name="dataDocumento", type="date")
      */
-    private $data;
+    private $dataDocumento;
 
     /**
      * @var string $formato
@@ -125,25 +125,29 @@ class Protocollo {
     private $user_id;
 
     /**
-     * @var datetime $created_at
+     * @var datetime $dataInserimento
      *
-     * @ORM\Column(name="created_at", type="datetime")
+     * @ORM\Column(name="dataInserimento", type="datetime")
      */
-    private $created_at;
+    private $dataInserimento;
 
     /**
-     * @var string $updated_at
-     *
-     * @ORM\Column(name="updated_at", type="datetime", nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $updated_at;
+    public $path;
+
+    /**
+     * @var \Symfony\Component\HttpFoundation\File\UploadedFile $allegato
+     * @Assert\File(maxSize="10000000")
+     */
+    public $allegato;
 
     public function __construct() {
         $data = new \DateTime();
         $this->anno = $data->format('Y');
         $this->protocollo = 0;
-        $this->data = $data;
-        $this->created_at = $data;
+        $this->dataDocumento = $data;
+        $this->dataInserimento = $data;
 
         return $this;
     }
@@ -222,23 +226,23 @@ class Protocollo {
     }
 
     /**
-     * Set data
+     * Set dataDocumento
      *
-     * @param date $data
+     * @param date $DataDocumento
      * @return Protocollo
      */
-    public function setData($data) {
-        $this->data = $data;
+    public function setDataDocumento($DataDocumento) {
+        $this->dataDocumento = $DataDocumento;
         return $this;
     }
 
     /**
-     * Get data
+     * Get dataDocumento
      *
      * @return date
      */
-    public function getData() {
-        return $this->data;
+    public function getDataDocumento() {
+        return $this->dataDocumento;
     }
 
     /**
@@ -384,49 +388,21 @@ class Protocollo {
     /**
      * Set created_at
      *
-     * @param datetime $createdAt
+     * @param datetime $dataInserimento
      * @return Protocollo
      */
-    public function setCreatedAt($createdAt) {
-        $this->created_at = $createdAt;
+    public function setDataInserimento($dataInserimento) {
+        $this->dataInserimento = $dataInserimento;
         return $this;
     }
 
     /**
-     * Get created_at
+     * Get data inserimento
      *
      * @return datetime
      */
-    public function getCreatedAt() {
-        return $this->created_at;
-    }
-
-    /**
-     * PreUpdate entity
-     * @ORM\PreUpdate
-     */
-    public function preUpdate() {
-        $this->updated_at = new \DateTime();
-    }
-
-    /**
-     * Set updated_at
-     *
-     * @param datetime $updatedAt
-     * @return Protocollo
-     */
-    public function setUpdatedAt($updatedAt) {
-        $this->updated_at = $updatedAt;
-        return $this;
-    }
-
-    /**
-     * Get updated_at
-     *
-     * @return datetime
-     */
-    public function getUpdatedAt() {
-        return $this->updated_at;
+    public function getDataInserimento() {
+        return $this->dataInserimento;
     }
 
     /**
@@ -487,6 +463,81 @@ class Protocollo {
      */
     public function getProtocolloDocumento() {
         return $this->protocolloDocumento;
+    }
+
+    /**
+     * Set path
+     *
+     * @param string $path
+     * @return Protocollo
+     */
+    public function setPath($path) {
+        $this->path = $path;
+        return $this;
+    }
+
+    /**
+     * Get path
+     *
+     * @return string
+     */
+    public function getPath() {
+        return $this->path;
+    }
+
+    public function getUploadRootDir() {
+        return __DIR__ . '/../Resources/private/documenti/';
+    }
+
+    public function getAbsolutePath() {
+        return null === $this->path ? null : $this->getUploadRootDir() . '/' . $this->getFileName();
+    }
+
+    public function getFileName() {
+        return $this->anno . '-' . $this->protocollo . '_' . $this->dataDocumento->format('d-m-Y') . '.' . $this->path;
+    }
+
+    /**
+     * @ORM\PrePersist()
+     * @ORM\PreUpdate()
+     */
+    public function preUpload() {
+        if (null !== $this->allegato) {
+            $this->path = $this->allegato->guessExtension();
+        }
+    }
+
+    /**
+     * @ORM\PostPersist()
+     * @ORM\PostUpdate()
+     */
+    public function postUpload() {
+        if (null === $this->allegato) {
+            return;
+        }
+
+        // se si verifica un errore mentre il file viene spostato viene
+        // lanciata automaticamente un'eccezione da move(). Questo eviterà
+        // la memorizzazione dell'entità nella base dati in caso di errore
+        $this->allegato->move($this->getUploadRootDir(), $this->getFileName());
+
+        unset($this->file);
+    }
+
+    /**
+     * @ORM\PreRemove()
+     */
+    public function storeFilenameForRemove() {
+        $this->filenameForRemove = $this->getAbsolutePath();
+    }
+
+    /**
+     * @ORM\PostRemove()
+     */
+    public function removeUpload() {
+        if ($this->filenameForRemove) {
+            unlink($this->filenameForRemove);
+        }
     }
 
 }
