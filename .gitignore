@@ -6,4 +6,5 @@
 /app/config/parameters.ini
 /nbproject/private/
 /src/GL/ProtocolloBundle/Resources/private/documenti/*
+!/src/GL/ProtocolloBundle/Resources/private/documenti/.gitkeep
 *~
