@@ -6,6 +6,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use GL\ProtocolloBundle\Entity\Protocollo;
 use GL\ProtocolloBundle\Form\ProtocolloType;
 
@@ -50,6 +52,38 @@ class ProtocolloController extends Controller {
         return array(
             'entity' => $entity,
         );
+    }
+
+    /**
+     * Finds and displays a Protocollo entity.
+     *
+     * @Route("/{id}/show/document", name="protocollo_show_document")
+     */
+    public function showDocumentAction($id) {
+        $em = $this->getDoctrine()->getManager();
+
+        $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
+
+        if (!$entity) {
+            throw $this->createNotFoundException('Unable to find Protocollo entity.');
+        }
+
+        /* get mime-type for a specific file */
+        $filename = $entity->getAbsolutePath();
+        $f = new \Symfony\Component\HttpFoundation\File\File($filename);
+
+        $headers = array(
+            //'Content-Type' => $f->getMimeType(),
+            'Content-Type' => mime_content_type($filename),
+            'Content-Disposition' => 'attachment',
+            'filename' => '"downloaded.pdf"'
+        );
+
+
+        $response = new Response(readfile($filename), 200, $headers);
+        //$response = new Response(print_r($headers, true));
+
+        return $response;
     }
 
     /**

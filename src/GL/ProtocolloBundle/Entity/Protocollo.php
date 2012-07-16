@@ -486,7 +486,7 @@ class Protocollo {
     }
 
     public function getUploadRootDir() {
-        return __DIR__ . '/../Resources/private/documenti/';
+        return __DIR__ . '/../Resources/private/documenti/' . $this->anno . '/';
     }
 
     public function getAbsolutePath() {
@@ -516,6 +516,9 @@ class Protocollo {
             return;
         }
 
+        if (!file_exists($this->getUploadRootDir())) {
+            mkdir($this->getUploadRootDir());
+        }
         // se si verifica un errore mentre il file viene spostato viene
         // lanciata automaticamente un'eccezione da move(). Questo eviterà
         // la memorizzazione dell'entità nella base dati in caso di errore

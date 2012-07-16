@@ -50,6 +50,10 @@
             <th>User_id</th>
             <td>{{ entity.userid }}</td>
         </tr>
+        <tr>
+            <th>Documento</th>
+            <td><a href="{{ path('protocollo_show_document', { 'id': entity.id }) }}">Visualizza documento</a></td>
+        </tr>
     </tbody>
 </table>
 

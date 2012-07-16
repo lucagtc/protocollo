@@ -18,10 +18,12 @@ class ProtocolloType extends AbstractType {
                     'expanded' => true,
                 ))
                 ->add('dataInserimento', 'date', array(
-                    'pattern' => '{{ day }}-{{ month }}-{{ year }}'
+                    'widget' => 'single_text',
+                    'format' => 'dd/MM/yyyy',
                 ))
                 ->add('dataDocumento', 'date', array(
-                    'pattern' => '{{ day }}-{{ month }}-{{ year }}'
+                    'widget' => 'single_text',
+                    'format' => 'dd/MM/yyyy',
                 ))
                 ->add('formato')
                 ->add('intestazione')

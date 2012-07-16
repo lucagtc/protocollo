@@ -1,6 +1,7 @@
 <h1>Protocollo creation</h1>
 
 <form action="{{ path('protocollo_create') }}" method="post" {{ form_enctype(form) }}>
+    {{ form_javascript(form) }}
     {{ form_widget(form) }}
     <p>
         <button type="submit">Aggiungi</button>
