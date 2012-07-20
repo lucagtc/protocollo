@@ -8,7 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * GL\ProtocolloBundle\Entity\Protocollo
  *
- * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="main_idx", columns={"anno", "protocollo"})})
+ * @ORM\Table()
  * @ORM\Entity(repositoryClass="GL\ProtocolloBundle\Repository\ProtocolloRepository")
  * @ORM\HasLifecycleCallbacks
  */
@@ -24,6 +24,13 @@ class Protocollo {
     private $id;
 
     /**
+     * @var integer $azienda
+     *
+     * @ORM\Column(name="azienda_id", type="integer")
+     */
+    private $azienda;
+
+    /**
      * @var integer $anno
      *
      * @ORM\Column(name="anno", type="integer")
@@ -33,7 +40,7 @@ class Protocollo {
     /**
      * @var integer $protocollo
      *
-     * @ORM\Column(name="protocollo", type="integer")
+     * @ORM\Column(name="protocollo", type="integer", nullable=true)
      */
     private $protocollo;
 
@@ -47,23 +54,23 @@ class Protocollo {
     private $tipo;
 
     /**
-     * @var date $dataDocumento
+     * @var datetime $dataInserimento
      *
-     * @ORM\Column(name="dataDocumento", type="date")
+     * @ORM\Column(name="dataInserimento", type="datetime")
      */
-    private $dataDocumento;
+    private $dataInserimento;
 
     /**
      * @var string $formato
      *
-     * @ORM\Column(name="formato", type="string", length=25)
+     * @ORM\Column(name="formato", type="string", length=25, nullable=true)
      */
     private $formato;
 
     /**
      * @var string $intestazione
      *
-     * @ORM\Column(name="intestazione", type="string", length=255)
+     * @ORM\Column(name="intestazione", type="string", length=255, nullable=true)
      */
     private $intestazione;
 
@@ -82,6 +89,13 @@ class Protocollo {
     private $localita;
 
     /**
+     * @var date $dataDocumento
+     *
+     * @ORM\Column(name="dataDocumento", type="date", nullable=true)
+     */
+    private $dataDocumento;
+
+    /**
      * @var string $oggetto
      *
      * @ORM\Column(name="oggetto", type="string", length=255, nullable=true)
@@ -96,11 +110,12 @@ class Protocollo {
     private $protocolloDocumento;
 
     /**
-     * @var string $posizione
+     * @var Protocollo $protocolloPrecedente
      *
-     * @ORM\Column(name="posizione", type="string", length=25, nullable=true)
+     * @ORM\OneToOne(targetEntity="Protocollo", inversedBy="protocolloSuccessivo")
+     * @ORM\JoinColumn(name="protocolloPrecedente_id", referencedColumnName="id", nullable=true, unique=true)
      */
-    private $posizione;
+    private $protocolloPrecedente;
 
     /**
      * @var Protocollo $protocolloSuccessivo
@@ -110,12 +125,25 @@ class Protocollo {
     private $protocolloSuccessivo;
 
     /**
-     * @var Protocollo $protocolloPrecedente
+     * @var string $categora
      *
-     * @ORM\OneToOne(targetEntity="Protocollo", inversedBy="protocolloSuccessivo")
-     * @ORM\JoinColumn(name="protocolloPrecedente_id", referencedColumnName="id", nullable=true, unique=true)
+     * @ORM\Column(name="categoria", type="string", length=25, nullable=true)
      */
-    private $protocolloPrecedente;
+    private $categoria;
+
+    /**
+     * @var string $classificazione
+     *
+     * @ORM\Column(name="classificazione", type="string", length=25, nullable=true)
+     */
+    private $classificazione;
+
+    /**
+     * @var string $fascicolo
+     *
+     * @ORM\Column(name="fascicolo", type="string", length=25, nullable=true)
+     */
+    private $fascicolo;
 
     /**
      * @var integer $user_id
@@ -125,16 +153,14 @@ class Protocollo {
     private $user_id;
 
     /**
-     * @var datetime $dataInserimento
-     *
-     * @ORM\Column(name="dataInserimento", type="datetime")
+     * @ORM\Column(name="documentiFileName", type="string", length=255, nullable=true)
      */
-    private $dataInserimento;
+    public $documentoFileName;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(name="documentiCheckSum", type="string", length=255, nullable=true)
      */
-    public $path;
+    public $documentoCheckSum;
 
     /**
      * @var \Symfony\Component\HttpFoundation\File\UploadedFile $allegato
@@ -144,16 +170,71 @@ class Protocollo {
 
     public function __construct() {
         $data = new \DateTime();
+        $this->azienda = 0;
         $this->anno = $data->format('Y');
         $this->protocollo = 0;
-        $this->dataDocumento = $data;
         $this->dataInserimento = $data;
 
         return $this;
     }
 
     public function __toString() {
-        return $this->anno . '/' . $this->protocollo;
+        return sprintf('%s-%04s', $this->anno, $this->protocollo);
+        ;
+    }
+
+    public function getUploadRootDir() {
+        return sprintf('%s/../Resources/private/documenti/%s/$s/', __DIR__, $this->azienda, $this->anno);
+    }
+
+    public function getAbsolutePath() {
+        return null === $this->path ? null : $this->getUploadRootDir() . '/' . $this->documentoFileName;
+    }
+
+    /**
+     * @ORM\PrePersist()
+     * @ORM\PreUpdate()
+     */
+    public function preUpload() {
+        if (null !== $this->allegato) {
+            $this->documentoCheckSum = md5_file($this->allegato->getRealPath());
+        }
+    }
+
+    /**
+     * @ORM\PostPersist()
+     * @ORM\PostUpdate()
+     */
+    public function postUpload() {
+        if (null === $this->allegato) {
+            return;
+        }
+
+        if (!file_exists($this->getUploadRootDir())) {
+            mkdir($this->getUploadRootDir());
+        }
+
+        $this->documentoFileName = $this->__toString() . '.' . $this->allegato->getExtension();
+
+        $this->allegato->move($this->getUploadRootDir(), $this->documentoFileName);
+
+        unset($this->file);
+    }
+
+    /**
+     * @ORM\PreRemove()
+     */
+    public function storeFilenameForRemove() {
+        $this->filenameForRemove = $this->getAbsolutePath();
+    }
+
+    /**
+     * @ORM\PostRemove()
+     */
+    public function removeUpload() {
+        if ($this->filenameForRemove) {
+            unlink($this->filenameForRemove);
+        }
     }
 
     /**
@@ -163,6 +244,26 @@ class Protocollo {
      */
     public function getId() {
         return $this->id;
+    }
+
+    /**
+     * Set azienda
+     *
+     * @param integer $azienda
+     * @return Protocollo
+     */
+    public function setAzienda($azienda) {
+        $this->azienda = $azienda;
+        return $this;
+    }
+
+    /**
+     * Get azienda
+     *
+     * @return integer
+     */
+    public function getAzienda() {
+        return $this->azienda;
     }
 
     /**
@@ -212,7 +313,7 @@ class Protocollo {
      * @return Protocollo
      */
     public function setTipo($tipo) {
-        $this->tipo = strtoupper($tipo);
+        $this->tipo = $tipo;
         return $this;
     }
 
@@ -226,23 +327,23 @@ class Protocollo {
     }
 
     /**
-     * Set dataDocumento
+     * Set dataInserimento
      *
-     * @param date $DataDocumento
+     * @param datetime $dataInserimento
      * @return Protocollo
      */
-    public function setDataDocumento($DataDocumento) {
-        $this->dataDocumento = $DataDocumento;
+    public function setDataInserimento($dataInserimento) {
+        $this->dataInserimento = $dataInserimento;
         return $this;
     }
 
     /**
-     * Get dataDocumento
+     * Get dataInserimento
      *
-     * @return date
+     * @return datetime
      */
-    public function getDataDocumento() {
-        return $this->dataDocumento;
+    public function getDataInserimento() {
+        return $this->dataInserimento;
     }
 
     /**
@@ -326,6 +427,26 @@ class Protocollo {
     }
 
     /**
+     * Set dataDocumento
+     *
+     * @param date $dataDocumento
+     * @return Protocollo
+     */
+    public function setDataDocumento($dataDocumento) {
+        $this->dataDocumento = $dataDocumento;
+        return $this;
+    }
+
+    /**
+     * Get dataDocumento
+     *
+     * @return date
+     */
+    public function getDataDocumento() {
+        return $this->dataDocumento;
+    }
+
+    /**
      * Set oggetto
      *
      * @param string $oggetto
@@ -343,106 +464,6 @@ class Protocollo {
      */
     public function getOggetto() {
         return $this->oggetto;
-    }
-
-    /**
-     * Set posizione
-     *
-     * @param string $posizione
-     * @return Protocollo
-     */
-    public function setPosizione($posizione) {
-        $this->posizione = $posizione;
-        return $this;
-    }
-
-    /**
-     * Get posizione
-     *
-     * @return string
-     */
-    public function getPosizione() {
-        return $this->posizione;
-    }
-
-    /**
-     * Set user_id
-     *
-     * @param integer $userId
-     * @return Protocollo
-     */
-    public function setUserId($userId) {
-        $this->user_id = $userId;
-        return $this;
-    }
-
-    /**
-     * Get user_id
-     *
-     * @return integer
-     */
-    public function getUserId() {
-        return $this->user_id;
-    }
-
-    /**
-     * Set created_at
-     *
-     * @param datetime $dataInserimento
-     * @return Protocollo
-     */
-    public function setDataInserimento($dataInserimento) {
-        $this->dataInserimento = $dataInserimento;
-        return $this;
-    }
-
-    /**
-     * Get data inserimento
-     *
-     * @return datetime
-     */
-    public function getDataInserimento() {
-        return $this->dataInserimento;
-    }
-
-    /**
-     * Set protocolloSuccessivo
-     *
-     * @param GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo
-     * @return Protocollo
-     */
-    public function setProtocolloSuccessivo(\GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo = null) {
-        $this->protocolloSuccessivo = $protocolloSuccessivo;
-        return $this;
-    }
-
-    /**
-     * Get protocolloSuccessivo
-     *
-     * @return GL\ProtocolloBundle\Entity\Protocollo
-     */
-    public function getProtocolloSuccessivo() {
-        return $this->protocolloSuccessivo;
-    }
-
-    /**
-     * Set protocolloPrecedente
-     *
-     * @param GL\ProtocolloBundle\Entity\Protocollo $protocolloPrecedente
-     * @return Protocollo
-     */
-    public function setProtocolloPrecedente(\GL\ProtocolloBundle\Entity\Protocollo $protocolloPrecedente = null) {
-        $this->protocolloPrecedente = $protocolloPrecedente;
-        return $this;
-    }
-
-    /**
-     * Get protocolloPrecedente
-     *
-     * @return GL\ProtocolloBundle\Entity\Protocollo
-     */
-    public function getProtocolloPrecedente() {
-        return $this->protocolloPrecedente;
     }
 
     /**
@@ -466,81 +487,165 @@ class Protocollo {
     }
 
     /**
-     * Set path
+     * Set categoria
      *
-     * @param string $path
+     * @param string $categoria
      * @return Protocollo
      */
-    public function setPath($path) {
-        $this->path = $path;
+    public function setCategoria($categoria) {
+        $this->categoria = $categoria;
         return $this;
     }
 
     /**
-     * Get path
+     * Get categoria
      *
      * @return string
      */
-    public function getPath() {
-        return $this->path;
-    }
-
-    public function getUploadRootDir() {
-        return __DIR__ . '/../Resources/private/documenti/' . $this->anno . '/';
-    }
-
-    public function getAbsolutePath() {
-        return null === $this->path ? null : $this->getUploadRootDir() . '/' . $this->getFileName();
-    }
-
-    public function getFileName() {
-        return $this->anno . '-' . $this->protocollo . '_' . $this->dataDocumento->format('d-m-Y') . '.' . $this->path;
+    public function getCategoria() {
+        return $this->categoria;
     }
 
     /**
-     * @ORM\PrePersist()
-     * @ORM\PreUpdate()
+     * Set classificazione
+     *
+     * @param string $classificazione
+     * @return Protocollo
      */
-    public function preUpload() {
-        if (null !== $this->allegato) {
-            $this->path = $this->allegato->guessExtension();
-        }
+    public function setClassificazione($classificazione) {
+        $this->classificazione = $classificazione;
+        return $this;
     }
 
     /**
-     * @ORM\PostPersist()
-     * @ORM\PostUpdate()
+     * Get classificazione
+     *
+     * @return string
      */
-    public function postUpload() {
-        if (null === $this->allegato) {
-            return;
-        }
-
-        if (!file_exists($this->getUploadRootDir())) {
-            mkdir($this->getUploadRootDir());
-        }
-        // se si verifica un errore mentre il file viene spostato viene
-        // lanciata automaticamente un'eccezione da move(). Questo eviterà
-        // la memorizzazione dell'entità nella base dati in caso di errore
-        $this->allegato->move($this->getUploadRootDir(), $this->getFileName());
-
-        unset($this->file);
+    public function getClassificazione() {
+        return $this->classificazione;
     }
 
     /**
-     * @ORM\PreRemove()
+     * Set fascicolo
+     *
+     * @param string $fascicolo
+     * @return Protocollo
      */
-    public function storeFilenameForRemove() {
-        $this->filenameForRemove = $this->getAbsolutePath();
+    public function setFascicolo($fascicolo) {
+        $this->fascicolo = $fascicolo;
+        return $this;
     }
 
     /**
-     * @ORM\PostRemove()
+     * Get fascicolo
+     *
+     * @return string
      */
-    public function removeUpload() {
-        if ($this->filenameForRemove) {
-            unlink($this->filenameForRemove);
-        }
+    public function getFascicolo() {
+        return $this->fascicolo;
     }
 
+    /**
+     * Set user_id
+     *
+     * @param integer $userId
+     * @return Protocollo
+     */
+    public function setUserId($userId) {
+        $this->user_id = $userId;
+        return $this;
+    }
+
+    /**
+     * Get user_id
+     *
+     * @return integer
+     */
+    public function getUserId() {
+        return $this->user_id;
+    }
+
+    /**
+     * Set documentoFileName
+     *
+     * @param string $documentoFileName
+     * @return Protocollo
+     */
+    public function setDocumentoFileName($documentoFileName) {
+        $this->documentoFileName = $documentoFileName;
+        return $this;
+    }
+
+    /**
+     * Get documentoFileName
+     *
+     * @return string
+     */
+    public function getDocumentoFileName() {
+        return $this->documentoFileName;
+    }
+
+    /**
+     * Set documentoCheckSum
+     *
+     * @param string $documentoCheckSum
+     * @return Protocollo
+     */
+    public function setDocumentoCheckSum($documentoCheckSum) {
+        $this->documentoCheckSum = $documentoCheckSum;
+        return $this;
+    }
+
+    /**
+     * Get documentoCheckSum
+     *
+     * @return string
+     */
+    public function getDocumentoCheckSum() {
+        return $this->documentoCheckSum;
+    }
+
+    /**
+     * Set protocolloPrecedente
+     *
+     * @param GL\ProtocolloBundle\Entity\Protocollo $protocolloPrecedente
+     * @return Protocollo
+     */
+    public function setProtocolloPrecedente(\GL\ProtocolloBundle\Entity\Protocollo $protocolloPrecedente = null) {
+        $this->protocolloPrecedente = $protocolloPrecedente;
+        return $this;
+    }
+
+    /**
+     * Get protocolloPrecedente
+     *
+     * @return GL\ProtocolloBundle\Entity\Protocollo
+     */
+    public function getProtocolloPrecedente() {
+        return $this->protocolloPrecedente;
+    }
+
+
+    /**
+     * Set protocolloSuccessivo
+     *
+     * @param GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo
+     * @return Protocollo
+     */
+    public function setProtocolloSuccessivo(\GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo = null)
+    {
+        $this->protocolloSuccessivo = $protocolloSuccessivo;
+        return $this;
+    }
+
+    /**
+     * Get protocolloSuccessivo
+     *
+     * @return GL\ProtocolloBundle\Entity\Protocollo 
+     */
+    public function getProtocolloSuccessivo()
+    {
+        return $this->protocolloSuccessivo;
+    }
 }

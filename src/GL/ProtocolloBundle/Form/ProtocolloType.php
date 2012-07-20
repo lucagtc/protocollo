@@ -31,7 +31,9 @@ class ProtocolloType extends AbstractType {
                 ->add('localita')
                 ->add('oggetto')
                 ->add('protocolloDocumento')
-                ->add('posizione')
+                ->add('categoria')
+                ->add('classificazione')
+                ->add('fascicolo')
                 ->add('protocolloPrecedente', 'entity', array(
                     'class' => 'GLProtocolloBundle:Protocollo',
                     'empty_value' => '',
