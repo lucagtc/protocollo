@@ -24,25 +24,24 @@ class ProtocolloRepository extends EntityRepository {
     public function persist(Protocollo $protocollo) {
         $anno = date('Y');
 
-        if ($protocollo->getAnno() == $anno && $protocollo->getProtocollo() == 0) {
+        if ($protocollo->getAnno() == $anno && $protocollo->getProtocolloNumero() == 0) {
 
-            $np = $this->getEntityManager()
+            $ultimoProtocollo = $this->getEntityManager()
                     ->getRepository('GLProtocolloBundle:Protocollo')
                     ->createQueryBuilder('p')
-                    ->select('p.protocollo')
                     ->where('p.anno = :anno')
-                    ->orderBy('p.protocollo', 'DESC')
+                    ->orderBy('p.protocolloNumero', 'DESC')
                     ->setMaxResults(1)
                     ->getQuery()
                     ->setParameter('anno', $protocollo->getAnno())
                     ->getOneOrNullResult();
-            if ($np) {
-                $protocollo->setProtocollo($np['protocollo'] + 1);
+            if ($ultimoProtocollo) {
+                $protocollo->setProtocolloNumero($ultimoProtocollo->getProtocolloNumero() + 1);
             } else {
-                $protocollo->setProtocollo(1);
+                $protocollo->setProtocolloNumero(1);
             }
         }
-        //$protocollo->upload('/tmp/', '/tmp/');
+
         $this->getEntityManager()->persist($protocollo);
 
         return $protocollo;

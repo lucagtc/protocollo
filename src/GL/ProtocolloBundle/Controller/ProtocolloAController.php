@@ -8,21 +8,20 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use GL\ProtocolloBundle\HttpFoundation\FileResponse;
 use GL\ProtocolloBundle\Entity\Protocollo;
 use GL\ProtocolloBundle\Form\ProtocolloType;
 
 /**
  * Protocollo controller.
  *
- * @Route("/protocollo/protocollo")
+ * @Route("/protocolla")
  */
-class ProtocolloController extends Controller {
+class ProtocolloAController extends Controller {
 
     /**
      * Lists all Protocollo entities.
      *
-     * @Route("/", name="protocollo_protocollo")
+     * @Route("/", name="protocollo")
      * @Template()
      */
     public function indexAction() {
@@ -38,7 +37,7 @@ class ProtocolloController extends Controller {
     /**
      * Finds and displays a Protocollo entity.
      *
-     * @Route("/{id}/show", name="protocollo_protocollo_show")
+     * @Route("/{id}/show", name="protocollo_show")
      * @Template()
      */
     public function showAction($id) {
@@ -50,18 +49,47 @@ class ProtocolloController extends Controller {
             throw $this->createNotFoundException('Unable to find Protocollo entity.');
         }
 
-        $deleteForm = $this->createDeleteForm($id);
-
         return array(
             'entity' => $entity,
-            'delete_form' => $deleteForm->createView(),
         );
+    }
+
+    /**
+     * Finds and displays a Protocollo entity.
+     *
+     * @Route("/{id}/show/document", name="protocollo_show_document")
+     */
+    public function showDocumentAction($id) {
+        $em = $this->getDoctrine()->getManager();
+
+        $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
+
+        if (!$entity) {
+            throw $this->createNotFoundException('Unable to find Protocollo entity.');
+        }
+
+        /* get mime-type for a specific file */
+        $filename = $entity->getAbsolutePath();
+        $f = new \Symfony\Component\HttpFoundation\File\File($filename);
+
+        $headers = array(
+            //'Content-Type' => $f->getMimeType(),
+            'Content-Type' => mime_content_type($filename),
+            'Content-Disposition' => 'attachment',
+            'filename' => '"downloaded.pdf"'
+        );
+
+
+        $response = new Response(readfile($filename), 200, $headers);
+        //$response = new Response(print_r($headers, true));
+
+        return $response;
     }
 
     /**
      * Displays a form to create a new Protocollo entity.
      *
-     * @Route("/new", name="protocollo_protocollo_new")
+     * @Route("/new", name="protocollo_new")
      * @Template()
      */
     public function newAction() {
@@ -77,7 +105,7 @@ class ProtocolloController extends Controller {
     /**
      * Creates a new Protocollo entity.
      *
-     * @Route("/create", name="protocollo_protocollo_create")
+     * @Route("/create", name="protocollo_create")
      * @Method("post")
      * @Template("GLProtocolloBundle:Protocollo:new.html.twig")
      */
@@ -92,7 +120,7 @@ class ProtocolloController extends Controller {
             $em->getRepository('GLProtocolloBundle:Protocollo')->persist($entity);
             $em->flush();
 
-            return $this->redirect($this->generateUrl('protocollo_protocollo_show', array('id' => $entity->getId())));
+            return $this->redirect($this->generateUrl('protocollo_show', array('id' => $entity->getId())));
         }
 
         return array(
@@ -104,7 +132,7 @@ class ProtocolloController extends Controller {
     /**
      * Displays a form to edit an existing Protocollo entity.
      *
-     * @Route("/{id}/edit", name="protocollo_protocollo_edit")
+     * @Route("/{id}/edit", name="protocollo_edit")
      * @Template()
      */
     public function editAction($id) {
@@ -129,7 +157,7 @@ class ProtocolloController extends Controller {
     /**
      * Edits an existing Protocollo entity.
      *
-     * @Route("/{id}/update", name="protocollo_protocollo_update")
+     * @Route("/{id}/update", name="protocollo_update")
      * @Method("post")
      * @Template("GLProtocolloBundle:Protocollo:edit.html.twig")
      */
@@ -150,10 +178,10 @@ class ProtocolloController extends Controller {
         $editForm->bindRequest($request);
 
         if ($editForm->isValid()) {
-            $em->persist($entity);
+            $em->getRepository('GLProtocolloBundle:Protocollo')->persist($entity);
             $em->flush();
 
-            return $this->redirect($this->generateUrl('protocollo_protocollo_edit', array('id' => $id)));
+            return $this->redirect($this->generateUrl('protocollo_edit', array('id' => $id)));
         }
 
         return array(
@@ -166,7 +194,7 @@ class ProtocolloController extends Controller {
     /**
      * Deletes a Protocollo entity.
      *
-     * @Route("/{id}/delete", name="protocollo_protocollo_delete")
+     * @Route("/{id}/delete", name="protocollo_delete")
      * @Method("post")
      */
     public function deleteAction($id) {
@@ -187,57 +215,7 @@ class ProtocolloController extends Controller {
             $em->flush();
         }
 
-        return $this->redirect($this->generateUrl('protocollo_protocollo'));
-    }
-
-    /**
-     * Rende l'immagine della prima pagina del documento
-     *
-     * @Route("/{id}/documento", name="protocollo_documento")
-     */
-    public function getDocumentoAction($id) {
-        $em = $this->getDoctrine()->getManager();
-
-        $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
-
-        if (!$entity) {
-            throw $this->createNotFoundException('Unable to find Protocollo entity.');
-        }
-
-        $filename = $entity->getAbsolutePath();
-
-        return FileResponse::createFromFile($filename, FileResponse::ATTACHMENT);
-    }
-
-    /**
-     * Rende l'immagine della prima pagina del documento
-     *
-     * @Route("/{id}/documento/anteprima", name="protocollo_documento_anteprima")
-     */
-    public function getDocumentoAnteprimaAction(Request $request, $id) {
-        $em = $this->getDoctrine()->getManager();
-
-        $entity = $em->getRepository('GLProtocolloBundle:Protocollo')->find($id);
-
-        if (!$entity) {
-            throw $this->createNotFoundException('Unable to find Protocollo entity.');
-        }
-
-        $filename = $entity->getAbsolutePath();
-
-        $page = 0;
-
-        $img = new \Imagick();
-        $img->setresolution(150, 150);
-        $img->setcompressionquality(50);
-        $img->readimage(sprintf('%s[%s]', $filename, $page));
-
-        $img->setimageformat('jpg');
-
-
-        $response = FileResponse::createFromContent($img->getimageblob(), null, 'image/jpeg');
-
-        return $response;
+        return $this->redirect($this->generateUrl('protocollo'));
     }
 
     private function createDeleteForm($id) {

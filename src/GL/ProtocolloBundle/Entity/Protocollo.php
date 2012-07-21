@@ -24,13 +24,6 @@ class Protocollo {
     private $id;
 
     /**
-     * @var integer $azienda
-     *
-     * @ORM\Column(name="azienda_id", type="integer")
-     */
-    private $azienda;
-
-    /**
      * @var integer $anno
      *
      * @ORM\Column(name="anno", type="integer")
@@ -38,11 +31,33 @@ class Protocollo {
     private $anno;
 
     /**
-     * @var integer $protocollo
+     * @var integer $protocolloNumero
      *
-     * @ORM\Column(name="protocollo", type="integer", nullable=true)
+     * @ORM\Column(name="protocolloNumero", type="integer", nullable=true)
      */
-    private $protocollo;
+    private $protocolloNumero;
+
+    /**
+     * @var Protocollo $protocolloPrecedente
+     *
+     * @ORM\OneToOne(targetEntity="Protocollo", inversedBy="protocolloSuccessivo")
+     * @ORM\JoinColumn(name="protocolloPrecedente_id", referencedColumnName="id", nullable=true, unique=true)
+     */
+    private $protocolloPrecedente;
+
+    /**
+     * @var Protocollo $protocolloSuccessivo
+     *
+     * @ORM\OneToOne(targetEntity="Protocollo", mappedBy="protocolloPrecedente")
+     */
+    private $protocolloSuccessivo;
+
+    /**
+     * @var datetime $dataRegistrazione
+     *
+     * @ORM\Column(name="dataRegistrazione", type="datetime")
+     */
+    private $dataRegistrazione;
 
     /**
      * @var string $tipo
@@ -54,16 +69,10 @@ class Protocollo {
     private $tipo;
 
     /**
-     * @var datetime $dataInserimento
+     * @var Formato $categoria
      *
-     * @ORM\Column(name="dataInserimento", type="datetime")
-     */
-    private $dataInserimento;
-
-    /**
-     * @var string $formato
-     *
-     * @ORM\Column(name="formato", type="string", length=25, nullable=true)
+     * @ORM\ManyToOne(targetEntity="Formato", inversedBy="protocolli")
+     * @ORM\JoinColumn(name="formato_id", referencedColumnName="id")
      */
     private $formato;
 
@@ -110,57 +119,40 @@ class Protocollo {
     private $protocolloDocumento;
 
     /**
-     * @var Protocollo $protocolloPrecedente
-     *
-     * @ORM\OneToOne(targetEntity="Protocollo", inversedBy="protocolloSuccessivo")
-     * @ORM\JoinColumn(name="protocolloPrecedente_id", referencedColumnName="id", nullable=true, unique=true)
+     * @ORM\Column(name="documento", type="string", length=255, nullable=true)
      */
-    private $protocolloPrecedente;
-
-    /**
-     * @var Protocollo $protocolloSuccessivo
-     *
-     * @ORM\OneToOne(targetEntity="Protocollo", mappedBy="protocolloPrecedente")
-     */
-    private $protocolloSuccessivo;
+    public $documento;
 
     /**
      * @var string $categora
      *
-     * @ORM\Column(name="categoria", type="string", length=25, nullable=true)
+     * @ORM\ManyToOne(targetEntity="Categoria", inversedBy="protocolli")
+     * @ORM\JoinColumn(name="categoria_id", referencedColumnName="id")
      */
     private $categoria;
 
     /**
      * @var string $classificazione
      *
-     * @ORM\Column(name="classificazione", type="string", length=25, nullable=true)
+     * @ORM\ManyToOne(targetEntity="Classificazione", inversedBy="protocolli")
+     * @ORM\JoinColumn(name="classificiazione_id", referencedColumnName="id")
      */
     private $classificazione;
 
     /**
      * @var string $fascicolo
      *
-     * @ORM\Column(name="fascicolo", type="string", length=25, nullable=true)
+     * @ORM\ManyToOne(targetEntity="Fascicolo", inversedBy="protocolli")
+     * @ORM\JoinColumn(name="fascicolo_id", referencedColumnName="id")
      */
     private $fascicolo;
 
     /**
      * @var integer $user_id
      *
-     * @ORM\Column(name="user_id", type="integer", nullable=true)
+     * @ORM\Column(name="utente", type="integer", nullable=true)
      */
-    private $user_id;
-
-    /**
-     * @ORM\Column(name="documentiFileName", type="string", length=255, nullable=true)
-     */
-    public $documentoFileName;
-
-    /**
-     * @ORM\Column(name="documentiCheckSum", type="string", length=255, nullable=true)
-     */
-    public $documentoCheckSum;
+    private $utente;
 
     /**
      * @var \Symfony\Component\HttpFoundation\File\UploadedFile $allegato
@@ -170,25 +162,27 @@ class Protocollo {
 
     public function __construct() {
         $data = new \DateTime();
-        $this->azienda = 0;
         $this->anno = $data->format('Y');
-        $this->protocollo = 0;
-        $this->dataInserimento = $data;
+        $this->protocolloNumero = 0;
+        $this->dataRegistrazione = $data;
 
         return $this;
     }
 
     public function __toString() {
-        return sprintf('%s-%04s', $this->anno, $this->protocollo);
-        ;
+        return $this->getAnnoProtocollo();
+    }
+
+    public function getAnnoProtocollo() {
+        return sprintf('%s-%04s', $this->anno, $this->protocolloNumero);
     }
 
     public function getUploadRootDir() {
-        return sprintf('%s/../Resources/private/documenti/%s/$s/', __DIR__, $this->azienda, $this->anno);
+        return __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Resources' . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . 'documenti' . DIRECTORY_SEPARATOR . $this->anno . DIRECTORY_SEPARATOR;
     }
 
     public function getAbsolutePath() {
-        return null === $this->path ? null : $this->getUploadRootDir() . '/' . $this->documentoFileName;
+        return null === $this->documento ? null : $this->getUploadRootDir() . $this->documento;
     }
 
     /**
@@ -197,7 +191,8 @@ class Protocollo {
      */
     public function preUpload() {
         if (null !== $this->allegato) {
-            $this->documentoCheckSum = md5_file($this->allegato->getRealPath());
+            $estensione = pathinfo($this->allegato->getClientOriginalName(), PATHINFO_EXTENSION);
+            $this->documento = $this->getAnnoProtocollo() . '.' . $estensione;
         }
     }
 
@@ -210,15 +205,9 @@ class Protocollo {
             return;
         }
 
-        if (!file_exists($this->getUploadRootDir())) {
-            mkdir($this->getUploadRootDir());
-        }
+        $this->allegato->move($this->getUploadRootDir(), $this->documento);
 
-        $this->documentoFileName = $this->__toString() . '.' . $this->allegato->getExtension();
-
-        $this->allegato->move($this->getUploadRootDir(), $this->documentoFileName);
-
-        unset($this->file);
+        unset($this->allegato);
     }
 
     /**
@@ -247,26 +236,6 @@ class Protocollo {
     }
 
     /**
-     * Set azienda
-     *
-     * @param integer $azienda
-     * @return Protocollo
-     */
-    public function setAzienda($azienda) {
-        $this->azienda = $azienda;
-        return $this;
-    }
-
-    /**
-     * Get azienda
-     *
-     * @return integer
-     */
-    public function getAzienda() {
-        return $this->azienda;
-    }
-
-    /**
      * Set anno
      *
      * @param integer $anno
@@ -287,23 +256,43 @@ class Protocollo {
     }
 
     /**
-     * Set protocollo
+     * Set protocolloNumero
      *
-     * @param integer $protocollo
+     * @param integer $protocolloNumero
      * @return Protocollo
      */
-    public function setProtocollo($protocollo) {
-        $this->protocollo = $protocollo;
+    public function setProtocolloNumero($protocolloNumero) {
+        $this->protocolloNumero = $protocolloNumero;
         return $this;
     }
 
     /**
-     * Get protocollo
+     * Get protocolloNumero
      *
      * @return integer
      */
-    public function getProtocollo() {
-        return $this->protocollo;
+    public function getProtocolloNumero() {
+        return $this->protocolloNumero;
+    }
+
+    /**
+     * Set dataRegistrazione
+     *
+     * @param datetime $dataRegistrazione
+     * @return Protocollo
+     */
+    public function setDataRegistrazione($dataRegistrazione) {
+        $this->dataRegistrazione = $dataRegistrazione;
+        return $this;
+    }
+
+    /**
+     * Get dataRegistrazione
+     *
+     * @return datetime
+     */
+    public function getDataRegistrazione() {
+        return $this->dataRegistrazione;
     }
 
     /**
@@ -324,46 +313,6 @@ class Protocollo {
      */
     public function getTipo() {
         return $this->tipo;
-    }
-
-    /**
-     * Set dataInserimento
-     *
-     * @param datetime $dataInserimento
-     * @return Protocollo
-     */
-    public function setDataInserimento($dataInserimento) {
-        $this->dataInserimento = $dataInserimento;
-        return $this;
-    }
-
-    /**
-     * Get dataInserimento
-     *
-     * @return datetime
-     */
-    public function getDataInserimento() {
-        return $this->dataInserimento;
-    }
-
-    /**
-     * Set formato
-     *
-     * @param string $formato
-     * @return Protocollo
-     */
-    public function setFormato($formato) {
-        $this->formato = $formato;
-        return $this;
-    }
-
-    /**
-     * Get formato
-     *
-     * @return string
-     */
-    public function getFormato() {
-        return $this->formato;
     }
 
     /**
@@ -487,123 +436,43 @@ class Protocollo {
     }
 
     /**
-     * Set categoria
+     * Set documento
      *
-     * @param string $categoria
+     * @param string $documento
      * @return Protocollo
      */
-    public function setCategoria($categoria) {
-        $this->categoria = $categoria;
+    public function setDocumento($documento) {
+        $this->documento = $documento;
         return $this;
     }
 
     /**
-     * Get categoria
+     * Get documento
      *
      * @return string
      */
-    public function getCategoria() {
-        return $this->categoria;
+    public function getDocumento() {
+        return $this->documento;
     }
 
     /**
-     * Set classificazione
+     * Set utente
      *
-     * @param string $classificazione
+     * @param integer $utente
      * @return Protocollo
      */
-    public function setClassificazione($classificazione) {
-        $this->classificazione = $classificazione;
+    public function setUtente($utente) {
+        $this->utente = $utente;
         return $this;
     }
 
     /**
-     * Get classificazione
-     *
-     * @return string
-     */
-    public function getClassificazione() {
-        return $this->classificazione;
-    }
-
-    /**
-     * Set fascicolo
-     *
-     * @param string $fascicolo
-     * @return Protocollo
-     */
-    public function setFascicolo($fascicolo) {
-        $this->fascicolo = $fascicolo;
-        return $this;
-    }
-
-    /**
-     * Get fascicolo
-     *
-     * @return string
-     */
-    public function getFascicolo() {
-        return $this->fascicolo;
-    }
-
-    /**
-     * Set user_id
-     *
-     * @param integer $userId
-     * @return Protocollo
-     */
-    public function setUserId($userId) {
-        $this->user_id = $userId;
-        return $this;
-    }
-
-    /**
-     * Get user_id
+     * Get utente
      *
      * @return integer
      */
-    public function getUserId() {
-        return $this->user_id;
-    }
-
-    /**
-     * Set documentoFileName
-     *
-     * @param string $documentoFileName
-     * @return Protocollo
-     */
-    public function setDocumentoFileName($documentoFileName) {
-        $this->documentoFileName = $documentoFileName;
-        return $this;
-    }
-
-    /**
-     * Get documentoFileName
-     *
-     * @return string
-     */
-    public function getDocumentoFileName() {
-        return $this->documentoFileName;
-    }
-
-    /**
-     * Set documentoCheckSum
-     *
-     * @param string $documentoCheckSum
-     * @return Protocollo
-     */
-    public function setDocumentoCheckSum($documentoCheckSum) {
-        $this->documentoCheckSum = $documentoCheckSum;
-        return $this;
-    }
-
-    /**
-     * Get documentoCheckSum
-     *
-     * @return string
-     */
-    public function getDocumentoCheckSum() {
-        return $this->documentoCheckSum;
+    public function getUtente() {
+        return $this->utente;
     }
 
     /**
@@ -626,15 +495,13 @@ class Protocollo {
         return $this->protocolloPrecedente;
     }
 
-
     /**
      * Set protocolloSuccessivo
      *
      * @param GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo
      * @return Protocollo
      */
-    public function setProtocolloSuccessivo(\GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo = null)
-    {
+    public function setProtocolloSuccessivo(\GL\ProtocolloBundle\Entity\Protocollo $protocolloSuccessivo = null) {
         $this->protocolloSuccessivo = $protocolloSuccessivo;
         return $this;
     }
@@ -642,10 +509,90 @@ class Protocollo {
     /**
      * Get protocolloSuccessivo
      *
-     * @return GL\ProtocolloBundle\Entity\Protocollo 
+     * @return GL\ProtocolloBundle\Entity\Protocollo
      */
-    public function getProtocolloSuccessivo()
-    {
+    public function getProtocolloSuccessivo() {
         return $this->protocolloSuccessivo;
     }
+
+    /**
+     * Set formato
+     *
+     * @param GL\ProtocolloBundle\Entity\Formato $formato
+     * @return Protocollo
+     */
+    public function setFormato(\GL\ProtocolloBundle\Entity\Formato $formato = null) {
+        $this->formato = $formato;
+        return $this;
+    }
+
+    /**
+     * Get formato
+     *
+     * @return GL\ProtocolloBundle\Entity\Formato
+     */
+    public function getFormato() {
+        return $this->formato;
+    }
+
+    /**
+     * Set categoria
+     *
+     * @param GL\ProtocolloBundle\Entity\Categoria $categoria
+     * @return Protocollo
+     */
+    public function setCategoria(\GL\ProtocolloBundle\Entity\Categoria $categoria = null) {
+        $this->categoria = $categoria;
+        return $this;
+    }
+
+    /**
+     * Get categoria
+     *
+     * @return GL\ProtocolloBundle\Entity\Categoria
+     */
+    public function getCategoria() {
+        return $this->categoria;
+    }
+
+    /**
+     * Set classificazione
+     *
+     * @param GL\ProtocolloBundle\Entity\Classificazione $classificazione
+     * @return Protocollo
+     */
+    public function setClassificazione(\GL\ProtocolloBundle\Entity\Classificazione $classificazione = null) {
+        $this->classificazione = $classificazione;
+        return $this;
+    }
+
+    /**
+     * Get classificazione
+     *
+     * @return GL\ProtocolloBundle\Entity\Classificazione
+     */
+    public function getClassificazione() {
+        return $this->classificazione;
+    }
+
+    /**
+     * Set fascicolo
+     *
+     * @param GL\ProtocolloBundle\Entity\Fascicolo $fascicolo
+     * @return Protocollo
+     */
+    public function setFascicolo(\GL\ProtocolloBundle\Entity\Fascicolo $fascicolo = null) {
+        $this->fascicolo = $fascicolo;
+        return $this;
+    }
+
+    /**
+     * Get fascicolo
+     *
+     * @return GL\ProtocolloBundle\Entity\Fascicolo
+     */
+    public function getFascicolo() {
+        return $this->fascicolo;
+    }
+
 }

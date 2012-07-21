@@ -4,7 +4,7 @@ namespace GL\ProtocolloBundle\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-class ProtocolloControllerTest extends WebTestCase
+class FormatoControllerTest extends WebTestCase
 {
     /*
     public function testCompleteScenario()
@@ -13,13 +13,13 @@ class ProtocolloControllerTest extends WebTestCase
         $client = static::createClient();
 
         // Create a new entry in the database
-        $crawler = $client->request('GET', '/protocollo/protocollo/');
+        $crawler = $client->request('GET', '/protocollo/formato/');
         $this->assertTrue(200 === $client->getResponse()->getStatusCode());
         $crawler = $client->click($crawler->selectLink('Create a new entry')->link());
 
         // Fill in the form and submit it
         $form = $crawler->selectButton('Create')->form(array(
-            'protocollo[field_name]'  => 'Test',
+            'formato[field_name]'  => 'Test',
             // ... other fields to fill
         ));
 
@@ -33,7 +33,7 @@ class ProtocolloControllerTest extends WebTestCase
         $crawler = $client->click($crawler->selectLink('Edit')->link());
 
         $form = $crawler->selectButton('Edit')->form(array(
-            'protocollo[field_name]'  => 'Foo',
+            'formato[field_name]'  => 'Foo',
             // ... other fields to fill
         ));
 

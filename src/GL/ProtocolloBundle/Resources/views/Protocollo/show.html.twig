@@ -3,28 +3,24 @@
 <table class="record_properties">
     <tbody>
         <tr>
+            <th>Id</th>
+            <td>{{ entity.id }}</td>
+        </tr>
+        <tr>
             <th>Anno</th>
             <td>{{ entity.anno }}</td>
         </tr>
         <tr>
-            <th>Protocollo</th>
-            <td>{{ entity.protocollo }}</td>
+            <th>Protocollonumero</th>
+            <td>{{ entity.protocolloNumero }}</td>
+        </tr>
+        <tr>
+            <th>Dataregistrazione</th>
+            <td>{{ entity.dataRegistrazione|date('Y-m-d H:i:s') }}</td>
         </tr>
         <tr>
             <th>Tipo</th>
             <td>{{ entity.tipo }}</td>
-        </tr>
-        <tr>
-            <th>Data inserito</th>
-            <td>{{ entity.dataInserimento|date('d/m/Y') }}</td>
-        </tr>
-        <tr>
-            <th>Data documento</th>
-            <td>{{ entity.dataDocumento|date('d/m/Y') }}</td>
-        </tr>
-        <tr>
-            <th>Formato</th>
-            <td>{{ entity.formato }}</td>
         </tr>
         <tr>
             <th>Intestazione</th>
@@ -39,33 +35,51 @@
             <td>{{ entity.localita }}</td>
         </tr>
         <tr>
+            <th>Datadocumento</th>
+            <td>{{ entity.dataDocumento|date('Y-m-d H:i:s') }}</td>
+        </tr>
+        <tr>
             <th>Oggetto</th>
             <td>{{ entity.oggetto }}</td>
         </tr>
         <tr>
-            <th>Posizione</th>
-            <td>{{ entity.posizione }}</td>
+            <th>Protocollodocumento</th>
+            <td>{{ entity.protocolloDocumento }}</td>
         </tr>
         <tr>
-            <th>User_id</th>
-            <td>{{ entity.userid }}</td>
+            <th>Categoria</th>
+            <td>{{ entity.categoria }}</td>
         </tr>
         <tr>
-            <th>Documento</th>
-            <td><a href="{{ path('protocollo_show_document', { 'id': entity.id }) }}">Visualizza documento</a></td>
+            <th>Classificazione</th>
+            <td>{{ entity.classificazione }}</td>
+        </tr>
+        <tr>
+            <th>Fascicolo</th>
+            <td>{{ entity.fascicolo }}</td>
+        </tr>
+        <tr>
+            <th>Utente</th>
+            <td>{{ entity.utente }}</td>
         </tr>
     </tbody>
 </table>
-
+<img src="{{ path('protocollo_documento_anteprima', { 'id': entity.id }) }}" style="position: absolute; top: 0; right: 0; width: 60% ">
 <ul class="record_actions">
     <li>
-        <a href="{{ path('protocollo') }}">
-            Torna alla lista
+        <a href="{{ path('protocollo_protocollo') }}">
+            Back to the list
         </a>
     </li>
     <li>
-        <a href="{{ path('protocollo_edit', { 'id': entity.id }) }}">
-            Modifica
+        <a href="{{ path('protocollo_protocollo_edit', { 'id': entity.id }) }}">
+            Edit
         </a>
+    </li>
+    <li>
+        <form action="{{ path('protocollo_protocollo_delete', { 'id': entity.id }) }}" method="post">
+            {{ form_widget(delete_form) }}
+            <button type="submit">Delete</button>
+        </form>
     </li>
 </ul>
